@@ -1,20 +1,60 @@
-from fastapi import APIRouter
+import os
+import tempfile
 
-from backend.app.schemas.chat import ChatRequest, ChatResponse
-from backend.app.services.chat_service import ChatService
+from fastapi import APIRouter, File, Form, UploadFile
 
-router = APIRouter()
+from backend.app.schemas.chat import ChatResponse
+from backend.app.services.chat_service import process_chat
+from backend.app.services.memory import clear_history
+from backend.app.services.rag.pipeline import ingest_document
+
+router = APIRouter(
+    prefix="/chat",
+    tags=["Chat"],
+)
 
 
-@router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+@router.post("", response_model=ChatResponse)
+async def chat(
+    message: str = Form(...),
+    session_id: str = Form(...),
+    file: UploadFile | None = File(None),
+):
 
-    response, detected_language = ChatService.chat(
-        message=request.message,
-        language=request.language,
+    if file:
+
+        suffix = os.path.splitext(file.filename)[1]
+
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=suffix,
+        ) as temp:
+
+            temp.write(await file.read())
+
+            temp_path = temp.name
+
+        ingest_document(
+            temp_path,
+            session_id,
+        )
+
+    result = process_chat(
+        message,
+        session_id,
     )
 
     return ChatResponse(
-        response=response,
-        language=detected_language,
+        response=result["response"],
+        language=result["language"],
     )
+
+
+@router.delete("/reset/{session_id}")
+async def reset_chat(session_id: str):
+
+    clear_history(session_id)
+
+    return {
+        "message": "Conversation reset successfully."
+    }

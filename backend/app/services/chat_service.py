@@ -1,20 +1,78 @@
-from backend.app.services.language_detection import detect_language
+from backend.app.services.language_detector import detect_language
+from backend.app.services.translator import (
+    translate_to_english,
+    translate_from_english,
+)
+from backend.app.services.memory import (
+    get_history,
+    add_message,
+)
+from backend.app.services.rag.rag_service import get_context
 from backend.app.services.llm import generate_response
 
 
-class ChatService:
+def process_chat(
+    message: str,
+    session_id: str,
+):
+    """
+    Main chat pipeline.
 
-    @staticmethod
-    def chat(message: str, language: str | None = None) -> tuple[str, str]:
-        """
-        Complete chat workflow.
-        """
+    User
+      ↓
+    Detect Language
+      ↓
+    Translate to English
+      ↓
+    Retrieve Document Context
+      ↓
+    LLM
+      ↓
+    Translate Back
+    """
 
-        detected_language = language
+    language = detect_language(message)
 
-        if not detected_language:
-            detected_language = detect_language(message)
+    if language != "en":
+        english_message = translate_to_english(
+            message,
+            language,
+        )
+    else:
+        english_message = message
 
-        response = generate_response(message)
+    history = get_history(session_id)
 
-        return response, detected_language
+    context = get_context(
+        query=english_message,
+        session_id=session_id,
+    )
+
+    response = generate_response(
+        query=english_message,
+        context=context,
+        history=history,
+    )
+
+    add_message(
+        session_id,
+        "user",
+        english_message,
+    )
+
+    add_message(
+        session_id,
+        "assistant",
+        response,
+    )
+
+    if language != "en":
+        response = translate_from_english(
+            response,
+            language,
+        )
+
+    return {
+        "response": response,
+        "language": language,
+    }

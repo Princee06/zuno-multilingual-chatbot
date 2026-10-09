@@ -1,5 +1,8 @@
 from fastapi import FastAPI
+
 from backend.app.routes.chat import router as chat_router
+from backend.app.routes.upload import router as upload_router
+
 
 app = FastAPI(
     title="Zuno API",
@@ -8,6 +11,7 @@ app = FastAPI(
 )
 
 app.include_router(chat_router)
+app.include_router(upload_router)
 
 
 @app.get("/")

@@ -1,68 +1,181 @@
 import re
-from langdetect import detect
 
-
-# -----------------------------------
-# Unicode Script Detection
-# -----------------------------------
+# -----------------------------
+# Native Script Unicode Ranges
+# -----------------------------
 
 SCRIPT_RANGES = {
-    "te": r"[\u0C00-\u0C7F]",   # Telugu
-    "hi": r"[\u0900-\u097F]",   # Hindi / Devanagari
-    "ta": r"[\u0B80-\u0BFF]",   # Tamil
-    "kn": r"[\u0C80-\u0CFF]",   # Kannada
-    "ml": r"[\u0D00-\u0D7F]",   # Malayalam
-    "gu": r"[\u0A80-\u0AFF]",   # Gujarati
-    "bn": r"[\u0980-\u09FF]",   # Bengali
-    "pa": r"[\u0A00-\u0A7F]",   # Punjabi
-    "or": r"[\u0B00-\u0B7F]",   # Odia
+    "hi": r"[\u0900-\u097F]",  # Hindi (Devanagari)
+    "te": r"[\u0C00-\u0C7F]",  # Telugu
+    "ta": r"[\u0B80-\u0BFF]",  # Tamil
+    "kn": r"[\u0C80-\u0CFF]",  # Kannada
+    "ml": r"[\u0D00-\u0D7F]",  # Malayalam
+    "gu": r"[\u0A80-\u0AFF]",  # Gujarati
+    "bn": r"[\u0980-\u09FF]",  # Bengali
+    "pa": r"[\u0A00-\u0A7F]",  # Punjabi (Gurmukhi)
 }
 
 
-def detect_script(text: str):
-    """
-    Detects whether the input contains a native Indian script.
-    """
+# ---------------------------------------------------
+# Roman Vocabulary
+# (We'll keep expanding this over time.)
+# ---------------------------------------------------
 
-    for lang, pattern in SCRIPT_RANGES.items():
-        if re.search(pattern, text):
-            return lang
+ROMAN_WORDS = {
 
-    return None
+    "te": {
+        "nenu", "meeru", "ela", "unnaru", "unnava",
+        "bagunnanu", "bagunnara", "andi", "avunu",
+        "kaadu", "em", "enti", "naaku", "mee",
+        "ekkada", "vellanu", "vastundi", "cheppu",
+        "cheppandi", "sare", "ledu", "inka",
+        "ippudu", "emi", "enduku", "evaru"
+    },
+
+    "hi": {
+        "namaste", "aap", "kaise", "ho",
+        "hai", "haan", "nahi", "mera",
+        "meri", "kya", "kyun", "kaun",
+        "main", "tum", "hum", "acha",
+        "accha", "theek", "dhanyavaad"
+    },
+
+    "ta": {
+        "vanakkam", "naan", "iruken",
+        "irukkiren", "unga", "epadi",
+        "saptingala", "nandri", "seri",
+        "illai", "enga", "enna"
+    },
+
+    "kn": {
+        "namaskara", "hegiddira",
+        "hegide", "nanu", "neevu",
+        "chenagiddini", "illa", "haudu",
+        "yenu", "elli", "dhanyavada"
+    },
+
+    "ml": {
+        "namaskaram", "sughamano",
+        "njan", "ningal", "entha",
+        "evide", "alle", "sheri"
+    },
+
+    "bn": {
+        "ami", "bhalo", "achi",
+        "tumi", "kemon", "dhonnobad"
+    },
+
+    "gu": {
+        "kem", "cho", "majama",
+        "hu", "tame", "shu"
+    },
+
+    "mr": {
+        "namaskar", "tumhi",
+        "kasa", "aahat",
+        "mi", "bara"
+    }
+
+}
 
 
 def detect_language(text: str):
     """
-    Detects:
-    - Native Indian languages
-    - English
-    - Unknown Roman text (handled later)
+    Detects both:
+
+    Native Script
+    Romanized Indian Languages
+    English
     """
 
-    script = detect_script(text)
+    text = text.strip()
 
-    if script:
-        return {
-            "language": script,
-            "style": "native"
-        }
+    # -----------------------
+    # Empty input
+    # -----------------------
 
-    try:
-        lang = detect(text)
-
-        if lang == "en":
-            return {
-                "language": "en",
-                "style": "english"
-            }
-
-        return {
-            "language": lang,
-            "style": "native"
-        }
-
-    except Exception:
+    if not text:
         return {
             "language": "unknown",
             "style": "unknown"
         }
+
+    # -----------------------
+    # Native Script Detection
+    # -----------------------
+
+    for language, pattern in SCRIPT_RANGES.items():
+
+        if re.search(pattern, text):
+
+            return {
+                "language": language,
+                "style": "native"
+            }
+
+    # -----------------------
+    # English Detection
+    # -----------------------
+
+    cleaned = re.sub(r"[^a-zA-Z ]", "", text).lower()
+
+    words = cleaned.split()
+
+    english_words = {
+        "hello", "hi", "how", "are", "you",
+        "what", "where", "when", "why",
+        "good", "morning", "night",
+        "thank", "thanks", "please",
+        "yes", "no", "can", "could",
+        "would", "is", "am", "the",
+        "my", "your", "name"
+    }
+
+    english_score = sum(
+        word in english_words
+        for word in words
+    )
+
+    # -----------------------
+    # Roman Language Scoring
+    # -----------------------
+
+    scores = {}
+
+    for lang, vocab in ROMAN_WORDS.items():
+
+        score = 0
+
+        for word in words:
+
+            if word in vocab:
+                score += 1
+
+        scores[lang] = score
+
+    best_language = max(scores, key=scores.get)
+
+    best_score = scores[best_language]
+
+    # -----------------------
+    # Decision
+    # -----------------------
+
+    if best_score > english_score and best_score > 0:
+
+        return {
+            "language": best_language,
+            "style": "roman"
+        }
+
+    if english_score > 0:
+
+        return {
+            "language": "en",
+            "style": "english"
+        }
+
+    return {
+        "language": "unknown",
+        "style": "unknown"
+    }

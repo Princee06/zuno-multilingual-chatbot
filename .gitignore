@@ -10,7 +10,7 @@ venv/
 .env
 
 # Model Weights
-models/
+/models/
 
 # IDE
 .vscode/
@@ -28,3 +28,10 @@ build/
 
 # Python Packaging
 *.egg-info/
+database/
+vector_db/
+uploads/
+
+database/
+vector_db/
+uploads/
