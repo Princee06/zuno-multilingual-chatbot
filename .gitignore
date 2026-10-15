@@ -35,3 +35,7 @@ uploads/
 database/
 vector_db/
 uploads/
+
+server.log
+*.log
+frontend.zip

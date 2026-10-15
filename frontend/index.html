@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zuno</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="bg" aria-hidden="true"></div>
+
+<section class="screen" id="land">
+  <h1 id="hello"></h1>
+  <p class="sub">Chat with your documents in your own language</p>
+  <div class="row"><button class="btn" data-go="login">Log in</button><button class="btn" data-go="signup">Sign up</button></div>
+</section>
+
+<section class="screen" id="auth" hidden>
+  <form class="card" id="af">
+    <h2 id="at"></h2>
+    <input class="f" id="nm" placeholder="Your name" autocomplete="name">
+    <input class="f" id="em" type="email" placeholder="Email" required autocomplete="email">
+    <input class="f" id="pw" type="password" placeholder="Password, at least 6 characters" minlength="6" required autocomplete="current-password">
+    <p class="err" id="err" role="alert"></p>
+    <button class="btn">Continue</button>
+    <button class="link" id="sw" type="button"></button>
+  </form>
+</section>
+
+<section class="screen" id="pick" hidden>
+  <h2>Choose your language</h2>
+  <p class="sub">Zuno will chat with you in it</p>
+  <div id="langs"></div>
+</section>
+
+<div id="app" hidden>
+  <aside>
+    <button class="btn sm" id="nc">New chat</button>
+    <div id="hist"></div>
+    <div class="row"><button class="btn sm" id="th">Theme</button><button class="btn sm" id="lg">Language</button><button class="btn sm" id="out">Log out</button></div>
+  </aside>
+  <div id="main">
+    <div id="top"><strong>Zuno</strong><span class="sub" id="who"></span></div>
+    <div id="log"></div>
+    <form id="bar">
+      <label class="btn sm" for="file">Attach</label>
+      <input id="file" type="file" accept=".pdf,.docx,.txt" hidden>
+      <span id="chip"></span>
+      <input id="text" placeholder="Type your message" autocomplete="off" aria-label="Message">
+      <button class="btn" id="send">Send</button>
+    </form>
+  </div>
+  <div id="pdf" hidden><iframe id="frame" title="Attached document"></iframe></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/core.js"></script>
+<script src="js/romanize.js"></script>
+<script src="js/landing.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

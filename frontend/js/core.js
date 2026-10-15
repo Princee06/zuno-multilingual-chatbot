@@ -1,0 +1,10 @@
+const API_BASE=(window.ZUNO_API_BASE||"").replace(/\/$/,"");
+const $=id=>document.getElementById(id),LS=localStorage,IND=/[\u0900-\u0D7F]/;
+const L=[["en","English","English","Welcome to Zuno","en-IN"],["hi","Hindi","हिन्दी","ज़ूनो में आपका स्वागत है","hi-IN"],["te","Telugu","తెలుగు","జునోకు స్వాగతం","te-IN"],["ta","Tamil","தமிழ்","ஜூனோவிற்கு வரவேற்கிறோம்","ta-IN"],["kn","Kannada","ಕನ್ನಡ","ಜುನೋಗೆ ಸ್ವಾಗತ","kn-IN"],["ml","Malayalam","മലയാളം","സൂണോയിലേക്ക് സ്വാഗതം","ml-IN"],["mr","Marathi","मराठी","झुनोमध्ये आपले स्वागत आहे","mr-IN"],["bn","Bengali","বাংলা","জুনোতে স্বাগতম","bn-IN"],["gu","Gujarati","ગુજરાતી","ઝુનોમાં આપનું સ્વાગત છે","gu-IN"],["pa","Punjabi","ਪੰਜਾਬੀ","ਜ਼ੁਨੋ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ","pa-IN"]];
+const find=c=>L.find(x=>x[0]===c)||L[0];
+const newId=()=>"s"+Math.random().toString(36).slice(2,10);
+const esc=s=>s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const md=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
+let me=null,data=null,cur=null,pending=null,mode="login",gi=0;
+const users=()=>JSON.parse(LS.getItem("zuno:users")||"{}");
+const save=()=>LS.setItem("zuno:d:"+me,JSON.stringify(data));

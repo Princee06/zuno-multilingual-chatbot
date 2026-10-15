@@ -3,10 +3,6 @@ from backend.app.services.translator import (
     translate_to_english,
     translate_from_english,
 )
-from backend.app.services.memory import (
-    get_history,
-    add_message,
-)
 from backend.app.services.rag.rag_service import get_context
 from backend.app.services.llm import generate_response
 
@@ -18,30 +14,25 @@ def process_chat(
     """
     Main chat pipeline.
 
-    User
-      ↓
-    Detect Language
-      ↓
-    Translate to English
-      ↓
-    Retrieve Document Context
-      ↓
-    LLM
-      ↓
-    Translate Back
+    1. Detect the language of the message
+    2. Translate to English if needed
+    3. Retrieve context from the uploaded document
+    4. Generate a reply with the LLM, which also saves memory
+    5. Translate the reply back to the user's language
     """
 
-    language = detect_language(message)
+    detected = detect_language(message)
 
-    if language != "en":
+    language = detected["language"]
+
+    if language in ("en", "unknown"):
+        language = "en"
+        english_message = message
+    else:
         english_message = translate_to_english(
             message,
             language,
         )
-    else:
-        english_message = message
-
-    history = get_history(session_id)
 
     context = get_context(
         query=english_message,
@@ -49,21 +40,9 @@ def process_chat(
     )
 
     response = generate_response(
-        query=english_message,
+        message=english_message,
+        session_id=session_id,
         context=context,
-        history=history,
-    )
-
-    add_message(
-        session_id,
-        "user",
-        english_message,
-    )
-
-    add_message(
-        session_id,
-        "assistant",
-        response,
     )
 
     if language != "en":
