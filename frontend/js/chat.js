@@ -35,7 +35,7 @@ function menu(d,i){
 document.onclick=()=>document.querySelectorAll(".menu").forEach(x=>x.remove());
 
 async function ask(text,redo){
-  const body=new FormData();body.append("message",text);body.append("session_id",cur.s);
+  const body=new FormData();body.append("message",text);body.append("session_id",cur.s);body.append("preferred_language",data.pref||"");
   if(pending&&redo==null)body.append("file",pending);
   if(redo==null){cur.m.push({r:"u",t:text});if(cur.t==="New chat")cur.t=text.slice(0,32)}
   draw();list();

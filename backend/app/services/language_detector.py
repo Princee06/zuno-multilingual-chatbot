@@ -29,7 +29,8 @@ ROMAN_WORDS = {
         "kaadu", "em", "enti", "naaku", "mee",
         "ekkada", "vellanu", "vastundi", "cheppu",
         "cheppandi", "sare", "ledu", "inka",
-        "ippudu", "emi", "enduku", "evaru"
+        "ippudu", "emi", "enduku", "evaru", "namaskaram", "naa", "peru", "daggara", "maamuluga",
+"maatladutunna", "maatladutunnanu", "maatladutunnaru"
     },
 
     "hi": {
@@ -79,46 +80,17 @@ ROMAN_WORDS = {
 }
 
 
-def detect_language(text: str):
-    """
-    Detects both:
-
-    Native Script
-    Romanized Indian Languages
-    English
-    """
-
+def detect_language(text: str, hint: str = ""):
     text = text.strip()
 
-    # -----------------------
-    # Empty input
-    # -----------------------
-
     if not text:
-        return {
-            "language": "unknown",
-            "style": "unknown"
-        }
-
-    # -----------------------
-    # Native Script Detection
-    # -----------------------
+        return {"language": "unknown", "style": "unknown"}
 
     for language, pattern in SCRIPT_RANGES.items():
-
         if re.search(pattern, text):
-
-            return {
-                "language": language,
-                "style": "native"
-            }
-
-    # -----------------------
-    # English Detection
-    # -----------------------
+            return {"language": language, "style": "native"}
 
     cleaned = re.sub(r"[^a-zA-Z ]", "", text).lower()
-
     words = cleaned.split()
 
     english_words = {
@@ -128,54 +100,24 @@ def detect_language(text: str):
         "thank", "thanks", "please",
         "yes", "no", "can", "could",
         "would", "is", "am", "the",
-        "my", "your", "name"
+        "my", "your", "name",
     }
 
-    english_score = sum(
-        word in english_words
-        for word in words
-    )
+    english_score = sum(word in english_words for word in words)
 
-    # -----------------------
-    # Roman Language Scoring
-    # -----------------------
+    scores = {
+        lang: sum(word in vocab for word in words)
+        for lang, vocab in ROMAN_WORDS.items()
+    }
 
-    scores = {}
-
-    for lang, vocab in ROMAN_WORDS.items():
-
-        score = 0
-
-        for word in words:
-
-            if word in vocab:
-                score += 1
-
-        scores[lang] = score
-
-    best_language = max(scores, key=scores.get)
-
-    best_score = scores[best_language]
-
-    # -----------------------
-    # Decision
-    # -----------------------
+    best_score = max(scores.values())
+    best = [lang for lang, s in scores.items() if s == best_score]
+    best_language = hint if hint in best else best[0]
 
     if best_score > english_score and best_score > 0:
-
-        return {
-            "language": best_language,
-            "style": "roman"
-        }
+        return {"language": best_language, "style": "roman"}
 
     if english_score > 0:
+        return {"language": "en", "style": "english"}
 
-        return {
-            "language": "en",
-            "style": "english"
-        }
-
-    return {
-        "language": "unknown",
-        "style": "unknown"
-    }
+    return {"language": "unknown", "style": "unknown"}
